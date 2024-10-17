@@ -5,6 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
   };
 
   outputs = inputs@{ self, nix-darwin, nixpkgs }:
@@ -20,6 +21,7 @@
       nix.settings.experimental-features = "nix-command flakes";
       nix.extraOptions = '' extra-platforms = x86_64-darwin aarch64-darwin '';
       nix.linux-builder.enable = true;
+      nixpkgs.config.allowUnfree = true;
 
       # Set Git commit hash for darwin-version.
       system.configurationRevision = self.rev or self.dirtyRev or null;
