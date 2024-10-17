@@ -11,7 +11,7 @@
   outputs = inputs@{ self, nix-darwin, nixpkgs, nix-homebrew }:
 
   let
-    configuration = { pkgs, ... }: {
+    configuration = { pkgs, config, ... }: {
 
       # Auto upgrade nix package and the daemon service.
       services.nix-daemon.enable = true;
