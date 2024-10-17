@@ -64,6 +64,7 @@
         less
         mpv
         neovim          # god mode
+        oh-my-posh      # zsh prompt
         pass
         ripgrep
         sox             # audio utils
@@ -71,6 +72,7 @@
         tmux
         yt-dlp          # download/view YouTube in terminal
         zbar            # read QR codes
+        zoxide          # "better" `cd`
 
         # archives
         p7zip
