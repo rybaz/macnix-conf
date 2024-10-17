@@ -67,7 +67,8 @@
         mpv
         neovim          # god mode
         oh-my-posh      # zsh prompt
-        pass.withExtensions (exts: [ exts.pass-otp ])
+        # pass.withExtensions (exts: [ exts.pass-otp ])
+        (pass.withExtensions (exts: [exts.pass-otp]))
         ripgrep
         sox             # audio utils
         stow            # dotfile management
