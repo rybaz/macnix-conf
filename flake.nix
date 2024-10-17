@@ -5,10 +5,10 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     nix-darwin.url = "github:LnL7/nix-darwin";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
-    # nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
   };
 
-  outputs = inputs@{ self, nix-darwin, nixpkgs }:
+  outputs = inputs@{ self, nix-darwin, nixpkgs, nix-homebrew }:
 
   let
     configuration = { pkgs, ... }: {
@@ -36,6 +36,14 @@
         dock.mineffect = "scale";
         dock.mru-spaces = false;
         dock.orientation = "left";
+        dock.persistent-apps = [
+          "/Applications/Firefox.app/"
+          "/Applications/Brave Browser.app"
+          "/Applications/Obsidian.app"
+          "/Applications/Signal.app"
+          "/Applications/TIDAL.app"
+          "${pkgs.alacritty}/Applications/Alacritty.app"
+        ];
         finder.AppleShowAllExtensions = true;
         finder.FXPreferredViewStyle = "clmv";
         loginwindow.GuestEnabled = false;
@@ -43,11 +51,35 @@
         menuExtraClock.Show24Hour = true;
         menuExtraClock.ShowDate = 1;
         menuExtraClock.ShowDayOfWeek = true;
+        NSGlobalDomain.AppleICUForce24HourTime = true;
+        NSGlobalDomain.AppleInterfaceStyle = "Dark";
+        NSGlobalDomain.KeyRepeat = 2;
         screencapture.disable-shadow = true;
-        screencapture.location = "~/home/files/pics/screenshots";
         screensaver.askForPasswordDelay = 10;
         spaces.spans-displays = false;
       };
+
+      # create aliases for Nix GUI apps in Spotlight
+      system.activationScripts.applications.text = let
+        env = pkgs.buildEnv {
+          name = "system-applications";
+          paths = config.environment.systemPackages;
+          pathsToLink = "/Applications";
+        };
+
+      in
+        pkgs.lib.mkForce ''
+        # Set up applications.
+        echo "setting up /Applications..." >&2
+        rm -rf /Applications/Nix\ Apps
+        mkdir -p /Applications/Nix\ Apps
+        find ${env}/Applications -maxdepth 1 -type l -exec readlink '{}' + |
+        while read src; do
+          app_name=$(basename "$src")
+          echo "copying $src" >&2
+          ${pkgs.mkalias}/bin/mkalias "$src" "/Applications/Nix Apps/$app_name"
+        done
+        '';
 
       # The platform the configuration will be used on.
       environment.systemPackages = with pkgs; [
@@ -126,6 +158,10 @@
         inconsolata-nerdfont   # good font
         pngpaste               # paste image files from clipboard
 	    ];
+
+      homebrew = {
+        enable = true;
+      };
       
       programs.zsh.enable = true;
 
@@ -133,7 +169,19 @@
   
   in {
     darwinConfigurations."mordu" = nix-darwin.lib.darwinSystem {
-      modules = [ configuration ];
+      modules = [ 
+        configuration 
+        # enable homebrew
+        nix-homebrew.darwinModules.nix-homebrew {
+          nix-homebrew = {
+            enable = true;
+            # apple silicon only
+            enableRosetta = true;
+            # user owning homebrew prefix
+            user = "ryan";
+          };
+        }
+      ];
     };
 
     darwinPackages = self.darwinConfigurations."mordu".pkgs;
